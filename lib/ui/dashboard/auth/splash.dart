@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:slink/ui/auth/login.dart';
+import 'package:slink/ui/dashboard/bubble_game.dart';
+import 'package:slink/utils/extensions.dart';
+
+import 'login.dart';
 
 class Splash extends StatefulWidget {
   const Splash({super.key});
@@ -36,12 +38,10 @@ class _SplashState extends State<Splash> {
   Future<void> onSplashLoad() async {
     await Future.delayed(const Duration(seconds: 3));
 
-    if(FirebaseAuth.instance.currentUser != null){
-      // DashBoard
-      print("user is logined");
-    }else{
-      Get.offAll(() => const LoginScreen());
+    if (FirebaseAuth.instance.currentUser != null) {
+      context.pushAndRemoveUntil(child: const BonusRound());
+    } else {
+      context.pushAndRemoveUntil(child: const LoginScreen());
     }
-
   }
 }

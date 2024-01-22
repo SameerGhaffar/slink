@@ -1,15 +1,16 @@
 part of 'auth_cubit.dart';
 
 class AuthState extends Equatable {
-  const AuthState();
+  DataState userState;
+
+  AuthState({required this.userState});
+
+  AuthState copyWith({DataState? userState}) {
+    return AuthState(
+      userState: userState ?? this.userState,
+    );
+  }
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [userState];
 }
-
-class AuthInitial extends AuthState {
-  @override
-  List<Object> get props => [];
-}
-
-
