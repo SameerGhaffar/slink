@@ -19,10 +19,9 @@ class AuthCubit extends Cubit<AuthState> {
       await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
       emit(state.copyWith(userState: DataState.success));
-    } catch (e) {
+    } on FirebaseAuthException catch (e) {
       emit(state.copyWith(userState: DataState.fail));
-
-      Functions.showSnackBar(context, e.toString());
+      Functions.showSnackBar(context, e.code.toString());
     }
   }
 

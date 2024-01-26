@@ -1,7 +1,7 @@
 import 'dart:math';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
+import 'package:slink/utils/colors.dart';
 
 class BonusRound extends StatefulWidget {
   const BonusRound({super.key});
@@ -19,17 +19,20 @@ class _BonusRoundState extends State<BonusRound> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: GestureDetector(
-            onTapDown: (details) {
-              print("tap");
-              bubbleGame.onTapDown(details);
-            },
-            child: Center(
-              child: GameWidget(
-                game: bubbleGame = BubbleGame(
-                  screenWidth: MediaQuery.of(context).size.width -
-                      16 * 0.95, // Subtract padding
-                  screenHeight: MediaQuery.of(context).size.height - 16,
+          child: Center(
+            child: Container(
+              color: Colors.black.withOpacity(0.2),
+              height: 600,
+              child: GestureDetector(
+                onTapDown: (details) {
+                  bubbleGame.onTapDown(details);
+                },
+                child: GameWidget(
+                  game: bubbleGame = BubbleGame(
+                    screenWidth: MediaQuery.of(context).size.width - 16 * 0.95,
+                    screenHeight: 600,
+                    ballColor: CColors.ballColors,
+                  ),
                 ),
               ),
             ),
@@ -43,8 +46,13 @@ class _BonusRoundState extends State<BonusRound> {
 class BubbleGame with Game {
   late List<Ball> balls;
   late double screenWidth, screenHeight;
+  late List<List<Color>> ballColor;
 
-  BubbleGame({required this.screenHeight, required this.screenWidth});
+  BubbleGame({
+    required this.screenHeight,
+    required this.screenWidth,
+    required this.ballColor,
+  });
 
   @override
   backgroundColor() {
@@ -55,9 +63,9 @@ class BubbleGame with Game {
   Future<void>? onLoad() async {
     super.onLoad();
     balls = List.generate(
-      10,
+      ballColor.length,
       (index) {
-        double ballSize = Random().nextDouble() * (100 - 50) + 50;
+        double ballSize = screenWidth * 0.25;
         double angle = 2 * pi * Random().nextDouble();
 
         Offset randomPosition = Offset(
@@ -66,17 +74,11 @@ class BubbleGame with Game {
         );
 
         return Ball(
+          gradientColors: ballColor[index],
           ballSize: ballSize,
-          paint: Paint()
-            ..color = Color.fromRGBO(
-              Random().nextInt(256),
-              Random().nextInt(256),
-              Random().nextInt(256),
-              1.0, // Alpha value (opacity)
-            ),
           index: index,
           position: randomPosition,
-          speed: 200,
+          speed: 100,
           direction: Offset(Random().nextDouble(), Random().nextDouble()),
         );
       },
@@ -87,8 +89,7 @@ class BubbleGame with Game {
   void render(Canvas canvas) {
     // Set background color to white
     canvas.drawRect(Rect.fromLTWH(0, 0, screenWidth, screenHeight),
-        Paint()..color = Colors.red);
-
+        Paint()..color = Colors.transparent);
     // Draw each ball
     for (final ball in balls) {
       ball.render(canvas);
@@ -99,9 +100,6 @@ class BubbleGame with Game {
   void update(double dt) {
     // Update each ball's position
     for (int i = 0; i < balls.length; i++) {
-      balls[i].update(dt, screenWidth, screenHeight);
-
-      // Check for collisions with other balls
       for (int j = i + 1; j < balls.length; j++) {
         if (balls[i].collidesWith(balls[j])) {
           // Handle collision by adjusting positions
@@ -109,9 +107,13 @@ class BubbleGame with Game {
         }
       }
     }
+
+    // Update each ball's position
+    for (int i = 0; i < balls.length; i++) {
+      balls[i].update(dt, screenWidth, screenHeight);
+    }
   }
 
-  @override
   void onTapDown(TapDownDetails details) {
     balls.removeWhere((ball) {
       if (ball.ballSize >= 140) {
@@ -142,17 +144,23 @@ class Ball {
   late Offset _direction;
   late double _speed;
   late double ballSize;
+  late List<Color> gradientColors;
 
   Ball(
       {required this.index,
       required Offset position,
       required double speed,
       required Offset direction,
-      required this.paint,
+      required this.gradientColors,
       required this.ballSize}) {
     _ballPos =
         Rect.fromCenter(center: position, width: ballSize, height: ballSize);
-    _speed = max(90.0, speed);
+    paint = Paint()
+      ..shader = RadialGradient(
+        colors: gradientColors,
+        radius: 4,
+      ).createShader(_ballPos);
+    _speed = speed;
     _direction = direction;
   }
 
@@ -191,8 +199,12 @@ class Ball {
     // Move the other ball
     other._ballPos = other._ballPos.translate(dx / 2, dy / 2);
 
-    // Reverse the direction of the current ball
-    _direction = Offset(-_direction.dx, -_direction.dy);
+    // this will reverse the direction after collision
+    // _direction = Offset(-_direction.dx, -_direction.dy);
+//------------------------------------------------------------------------------
+    // this will random the direction after collision
+    _direction =
+        Offset(Random().nextDouble() * 2 - 1, Random().nextDouble() * 2 - 1);
 
     // Swap direction to simulate bouncing off
     double dx1 = _direction.dx;
@@ -208,42 +220,93 @@ class Ball {
         _ballPos.right > screenWidth ||
         _ballPos.top < 0 ||
         _ballPos.bottom > screenHeight) {
+      print("ball is out of the bound$index");
       // Ball is out of bounds, reset it
       resetBall(screenWidth, screenHeight);
     }
   }
-
   void resetBall(final double screenWidth, final double screenHeight) {
-    double angle = 2 * pi * Random().nextDouble();
-    Offset randomPosition = Offset(
-      screenWidth / 2 + cos(angle) * (screenWidth / 2 - ballSize),
-      screenHeight / 2 + sin(angle) * (screenHeight / 2 - ballSize),
-    );
-    _ballPos = Rect.fromCenter(
-        center: randomPosition, width: ballSize, height: ballSize);
-    ;
-    _direction = Offset(Random().nextDouble(), Random().nextDouble());
-    _speed = 200;
+    // Slightly change the position of the ball
+    _ballPos = _ballPos.translate(
+        Random().nextDouble() * 10 - 5, Random().nextDouble() * 10 - 5);
+
+    // Ensure the ball stays within the screen boundaries
+    if (_ballPos.left < 0) {
+      _ballPos = _ballPos.translate(0 - _ballPos.left, 0);
+      _direction = Offset(-_direction.dx, _direction.dy);
+    } else if (_ballPos.right > screenWidth) {
+      _ballPos = _ballPos.translate(screenWidth - _ballPos.right, 0);
+      _direction = Offset(-_direction.dx, _direction.dy);
+    }
+    if (_ballPos.top < 0) {
+      _ballPos = _ballPos.translate(0, 0 - _ballPos.top);
+      _direction = Offset(_direction.dx, -_direction.dy);
+    } else if (_ballPos.bottom > screenHeight) {
+      _ballPos = _ballPos.translate(0, screenHeight - _ballPos.bottom);
+      _direction = Offset(_direction.dx, -_direction.dy);
+    }
+
+    // Keep the speed the same
+    _speed = 100;
   }
+  // void resetBall(final double screenWidth, final double screenHeight) {
+  //   // Slightly change the position of the ball
+  //   _ballPos = _ballPos.translate(
+  //       Random().nextDouble() * 10 - 5, Random().nextDouble() * 10 - 5);
+  //
+  //   // Ensure the ball stays within the screen boundaries
+  //   if (_ballPos.left < 0) {
+  //     _ballPos = _ballPos.translate(0 - _ballPos.left, 0);
+  //     _direction = Offset(-_direction.dx, _direction.dy);
+  //   } else if (_ballPos.right > screenWidth) {
+  //     _ballPos = _ballPos.translate(screenWidth - _ballPos.right, 0);
+  //     _direction = Offset(-_direction.dx, _direction.dy);
+  //   }
+  //   if (_ballPos.top < 0) {
+  //     _ballPos = _ballPos.translate(0, 0 - _ballPos.top);
+  //     _direction = Offset(_direction.dx, -_direction.dy);
+  //   } else if (_ballPos.bottom > screenHeight) {
+  //     _ballPos = _ballPos.translate(0, screenHeight - _ballPos.bottom);
+  //     _direction = Offset(_direction.dx, -_direction.dy);
+  //   }
+  //
+  //   // Keep the speed the same
+  //   _speed = 100;
+  // }
+
 
   void render(Canvas canvas) {
+    paint.shader = RadialGradient(
+      colors: gradientColors,
+    ).createShader(_ballPos);
     // Draw the ball
     canvas.drawOval(_ballPos, paint);
 
     // Draw the index inside the ball
     TextPainter textPainter = TextPainter(
       text: TextSpan(
-        text: ballSize.toInt().toString(),
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16.0,
-          fontWeight: FontWeight.bold,
-        ),
+        children: [
+          TextSpan(
+            text: "${ballSize.toInt()}\n",
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const TextSpan(
+            text: "physics",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
       textAlign: TextAlign.center,
       textDirection: TextDirection.ltr,
     );
-
     textPainter.layout();
     textPainter.paint(
       canvas,
@@ -253,31 +316,18 @@ class Ball {
       ),
     );
   }
-
   void update(double dt, double screenWidth, double screenHeight) {
-    // Update the ball's position
+    // Calculate the new position of the ball
     final newPosition = _ballPos.center + _direction * _speed * dt;
 
-    // Ensure the new position does not go beyond the screen boundaries
-    if (newPosition.dx - _ballPos.width / 2 < 0) {
-      // Colliding with left wall
-      _ballPos = _ballPos.translate(-(_ballPos.left - _ballPos.width / 2), 0);
-      _direction = Offset(-_direction.dx, _direction.dy);
-    } else if (newPosition.dx + _ballPos.width / 2 > screenWidth) {
-      // Colliding with right wall
-      _ballPos = _ballPos.translate(
-          screenWidth - (_ballPos.right - _ballPos.width / 2), 0);
+    // Check for ball-wall collisions
+    if (newPosition.dx - _ballPos.width / 2 < 0 || newPosition.dx + _ballPos.width / 2 > screenWidth) {
+      // Colliding with a wall
       _direction = Offset(-_direction.dx, _direction.dy);
     }
 
-    if (newPosition.dy - _ballPos.height / 2 < 0) {
-      // Colliding with top wall
-      _ballPos = _ballPos.translate(0, -(_ballPos.top - _ballPos.height / 2));
-      _direction = Offset(_direction.dx, -_direction.dy);
-    } else if (newPosition.dy + _ballPos.height / 2 > screenHeight) {
-      // Colliding with bottom wall
-      _ballPos = _ballPos.translate(
-          0, screenHeight - (_ballPos.bottom - _ballPos.height / 2));
+    if (newPosition.dy - _ballPos.height / 2 < 0 || newPosition.dy + _ballPos.height / 2 > screenHeight) {
+      // Colliding with a wall
       _direction = Offset(_direction.dx, -_direction.dy);
     }
 
@@ -285,6 +335,37 @@ class Ball {
     _ballPos = Rect.fromCenter(
         center: newPosition, width: _ballPos.width, height: _ballPos.height);
   }
+  // void update(double dt, double screenWidth, double screenHeight) {
+  //   // Update the ball's position
+  //   final newPosition = _ballPos.center + _direction * _speed * dt;
+  //
+  //   // Ensure the new position does not go beyond the screen boundaries
+  //   if (newPosition.dx - _ballPos.width / 2 < 0) {
+  //     // Colliding with left wall
+  //     _ballPos = _ballPos.translate(-(_ballPos.left - _ballPos.width / 2), 0);
+  //     _direction = Offset(-_direction.dx, _direction.dy);
+  //   } else if (newPosition.dx + _ballPos.width / 2 > screenWidth) {
+  //     // Colliding with right wall
+  //     _ballPos = _ballPos.translate(
+  //         screenWidth - (_ballPos.right - _ballPos.width / 2), 0);
+  //     _direction = Offset(-_direction.dx, _direction.dy);
+  //   }
+  //
+  //   if (newPosition.dy - _ballPos.height / 2 < 0) {
+  //     // Colliding with top wall
+  //     _ballPos = _ballPos.translate(0, -(_ballPos.top - _ballPos.height / 2));
+  //     _direction = Offset(_direction.dx, -_direction.dy);
+  //   } else if (newPosition.dy + _ballPos.height / 2 > screenHeight) {
+  //     // Colliding with bottom wall
+  //     _ballPos = _ballPos.translate(
+  //         0, screenHeight - (_ballPos.bottom - _ballPos.height / 2));
+  //     _direction = Offset(_direction.dx, -_direction.dy);
+  //   }
+  //
+  //   // Update the ball position after collision handling
+  //   _ballPos = Rect.fromCenter(
+  //       center: newPosition, width: _ballPos.width, height: _ballPos.height);
+  // }
 
   double calculateDistance(Offset point1, Offset point2) {
     double dx = point1.dx - point2.dx;

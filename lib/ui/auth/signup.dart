@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:slink/cubit/auth_cubit/auth_cubit.dart';
+import 'package:slink/bloc/auth_bloc/auth_cubit.dart';
 import 'package:slink/ui/widgets/app_bar.dart';
 import 'package:slink/ui/widgets/margin_widget.dart';
 import 'package:slink/ui/widgets/text_field.dart';

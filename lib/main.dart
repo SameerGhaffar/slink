@@ -1,8 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:slink/cubit/auth_cubit/auth_cubit.dart';
-import 'package:slink/ui/dashboard/auth/splash.dart';
+import 'package:slink/bloc/auth_bloc/auth_cubit.dart';
+import 'package:slink/ui/auth/splash.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
