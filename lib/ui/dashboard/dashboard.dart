@@ -1,7 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:slink/bloc/auth_bloc/auth_cubit.dart';
 import 'package:slink/ui/widgets/margin_widget.dart';
+import 'package:slink/ui/widgets/test_button.dart';
 import 'package:slink/utils/app_string.dart';
+import 'package:slink/utils/colors.dart';
 import 'package:slink/utils/extensions.dart';
 
 class DashBoardScreen extends StatefulWidget {
@@ -16,24 +19,57 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
   Widget build(BuildContext context) {
     double height = context.height;
     double width = context.width;
-    return DefaultTabController(
-      length: 3,
-      initialIndex: 0,
-      child: Scaffold(
-        appBar: appBar(),
-        body: const TabBarView(
-          children: [
-            Center(
-              child: Text("It's cloudy here"),
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, state) {
+        return DefaultTabController(
+          length: 3,
+          initialIndex: state.tabIndex,
+          child: Scaffold(
+            appBar: appBar(),
+            body: TabBarView(
+              children: [
+                body1(context, state),
+                const Center(
+                  child: Text("It's rainy here"),
+                ),
+                const Center(
+                  child: Text("It's sunny here"),
+                ),
+              ],
             ),
-            Center(
-              child: Text("It's rainy here"),
+          ),
+        );
+      },
+    );
+  }
+
+  Center body1(BuildContext context, AuthState state) {
+    print(state.tabIndex);
+    return Center(
+      child: Column(
+        children: [
+          SizedBox(
+            height: 20,
+          ),
+          InkWell(
+            onTap: () {
+              context.read<AuthCubit>().addIndex(1);
+            },
+            child: SizedBox(
+              height: 52,
+              width: 200,
+              child: Frame(
+                bgGradient: CColors.innerBodyLinearGradient(),
+                child: Text(
+                  "Login",
+                  style: TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+              ),
             ),
-            Center(
-              child: Text("It's sunny here"),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -57,17 +93,27 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
       ],
       leadingWidth: context.width * 0.2,
       leading: profileImage(),
-      bottom: const TabBar(tabs: [
-        Tab(
-          icon: Icon(Icons.cloud_outlined),
-        ),
-        Tab(
-          icon: Icon(Icons.beach_access_sharp),
-        ),
-        Tab(
-          icon: Icon(Icons.brightness_5_sharp),
-        ),
-      ]),
+      bottom: TabBar(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        dividerHeight: 0.0,
+        overlayColor: Colors.transparent.toMaterialStateProperty(),
+        labelColor: Colors.black,
+        unselectedLabelColor: Colors.grey,
+        indicatorColor: Colors.blue,
+        indicatorSize: TabBarIndicatorSize.tab,
+        physics: const NeverScrollableScrollPhysics(),
+        tabs: [
+          const Tab(
+            child: Text("Chat"),
+          ),
+          const Tab(
+            child: Text("Status"),
+          ),
+          const Tab(
+            child: Text("Groups"),
+          ),
+        ],
+      ),
     );
   }
 

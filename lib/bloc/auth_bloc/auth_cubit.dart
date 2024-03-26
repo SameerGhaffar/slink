@@ -8,7 +8,12 @@ import 'package:slink/utils/state.dart';
 part 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
-  AuthCubit() : super(AuthState(userState: DataState.waiting));
+  AuthCubit()
+      : super(const AuthState(userState: DataState.waiting, tabIndex: 0));
+
+  void addIndex(int index) {
+    emit(state.copyWith(index: index));
+  }
 
   Future<void> logIn(
       {required BuildContext context,

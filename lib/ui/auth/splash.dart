@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:slink/ui/dashboard/bubble_game.dart';
 import 'package:slink/ui/dashboard/dashboard.dart';
 import 'package:slink/utils/extensions.dart';
 

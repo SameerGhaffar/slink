@@ -37,7 +37,6 @@ class CColors {
       const Color.fromRGBO(0, 0, 0, 0.50), // Black
       const Color.fromRGBO(0, 0, 0, 0.39), // Black
     ],
-
     [
       const Color.fromRGBO(128, 0, 0, 0.90), // Maroon
       const Color.fromRGBO(128, 0, 0, 0.50), // Maroon
@@ -47,5 +46,70 @@ class CColors {
 
   static Gradient ballGradient({double? radius, required List<Color> colors}) {
     return RadialGradient(radius: radius ?? 4, colors: colors);
+  }
+
+  static LinearGradient outerLinearGradient() {
+    return const LinearGradient(
+      colors: [
+        Color(0xffD8DFED),
+        Color(0xff96A9D0),
+        Color(0xff84759B),
+      ],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    );
+  }
+
+  static LinearGradient innerBodyLinearGradient() {
+    return const LinearGradient(
+      colors: [Color(0xff29C5FF), Color(0xff0D90CB), Color(0xff14AAFD)],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    );
+  }
+
+  static LinearGradient top() {
+    return const LinearGradient(
+      colors: [
+        Color(0xff705AB6),
+        Color(0xff181D3B),
+      ],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    );
+  }
+
+  static LinearGradient bottom() {
+    return const LinearGradient(
+      colors: [
+        Color(0xff84759B),
+        Color(0xff96A9D0),
+        Color(0xffD8DFED),
+      ],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    );
+  }
+
+  static LinearGradient right() {
+    return const LinearGradient(
+      colors: [
+        Color(0xff7571A3),
+        Color(0xff595173),
+      ],
+      begin: Alignment.centerRight,
+      end: Alignment.centerLeft,
+    );
+  }
+
+  static LinearGradient left() {
+    return const LinearGradient(
+      colors: [
+        Color(0xff7571A3),
+        Color(0xff595173),
+      ],
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+    );
   }
 }
